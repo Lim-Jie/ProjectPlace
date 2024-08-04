@@ -1,0 +1,20 @@
+
+.card {
+    background: linear-gradient(135deg, #ff7e5f, #feb47b); /* Example gradient */
+    border-radius: 15px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  
+  .description {
+    font-size: 1rem;
+  }
+  

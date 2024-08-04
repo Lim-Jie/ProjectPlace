@@ -1,0 +1,35 @@
+/* components/Tabs.module.css */
+
+.tabContainer {
+  display: flex;
+  border-bottom: 2px solid #ddd;
+  width: 100%; /* Make sure the container stretches to the full width of its parent */
+}
+
+.tab {
+  flex: 1; /* Ensure tabs take up equal space */
+  padding: 10px;
+  background: #f4f4f4;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  font-weight: bold;
+  transition: background 0.3s ease; /* Smooth background transition */
+}
+
+.tab:hover {
+  background: #e0e0e0;
+}
+
+.active {
+  background: #fff;
+  border-bottom: 2px solid #0070f3;
+}
+
+.content {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: -1px; /* To remove the gap between the tabs and content */
+}
