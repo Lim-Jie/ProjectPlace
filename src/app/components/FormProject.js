@@ -1,12 +1,48 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Switch from 'react-switch';
+import { storeFormDataWithEmailVerification } from '../firebase/config'; // Adjust the import path based on your file structure
 
 export default function ProjectForm() {
-    const [formData, setFormData] = useState({ ProductName: '', Definition: '', Author: '', ExtraField: '',Textfield_TechStack:'', Textfield_ProjectDeployed: ''});
+    const [formData, setFormData] = useState({
+        ProductName: '',
+        Definition: '',
+        Author: '',
+        TechStack: '',
+        Link: '',
+        Email: '' // Added Email field
+    });
     const [isUsingTechStack, setUsingTechStack] = useState(false);
     const [isProjectDeployed, setProjectDeployed] = useState(false);
+    const [error, setError] = useState('');
 
+    // Load data from localStorage when component mounts
+    useEffect(() => {
+        console.log('Loading data from localStorage...');
+        const savedData = localStorage.getItem('projectFormData');
+        const savedTechStack = localStorage.getItem('isUsingTechStack');
+        const savedProjectDeployed = localStorage.getItem('isProjectDeployed');
+
+        if (savedData) {
+            setFormData(JSON.parse(savedData));
+        }
+        if (savedTechStack) {
+            setUsingTechStack(JSON.parse(savedTechStack));
+        }
+        if (savedProjectDeployed) {
+            setProjectDeployed(JSON.parse(savedProjectDeployed));
+        }
+    }, []);
+
+    // Save data to localStorage whenever formData, isUsingTechStack, or isProjectDeployed changes
+    useEffect(() => {
+        console.log('Saving data to localStorage...');
+        if (formData.ProductName || formData.Definition || formData.Author || formData.TechStack || formData.Link || formData.Email) {
+            localStorage.setItem('projectFormData', JSON.stringify(formData));
+        }
+        localStorage.setItem('isUsingTechStack', JSON.stringify(isUsingTechStack));
+        localStorage.setItem('isProjectDeployed', JSON.stringify(isProjectDeployed));
+    }, [formData, isUsingTechStack, isProjectDeployed]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -14,6 +50,15 @@ export default function ProjectForm() {
             ...formData,
             [name]: value,
         });
+
+        if (name === 'Definition') {
+            const wordCount = value.trim().split(/\s+/).length;
+            if (wordCount < 20) {
+                setError('The Definition field must contain at least 20 words.');
+            } else {
+                setError('');
+            }
+        }
     };
 
     const handleTechStack = (checked) => {
@@ -24,10 +69,39 @@ export default function ProjectForm() {
         setProjectDeployed(checked);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Process form data here (e.g., send to an API, log to console, etc.)
-        console.log(formData);
+    
+        // Validate form data before submitting
+        if (error) {
+            console.log('Form has errors. Cannot submit.');
+            return;
+        }
+    
+        try {
+            // Save form data to Firestore and update user document
+            await storeFormDataWithEmailVerification('Testing', true, formData, formData.Email); // Collection name is 'Testing', auto ID is true
+            console.log('Form data saved successfully.');
+    
+            // Clear local storage after successful submission
+            localStorage.removeItem('projectFormData');
+            localStorage.removeItem('isUsingTechStack');
+            localStorage.removeItem('isProjectDeployed');
+    
+            // Optionally reset form state here if desired
+            setFormData({
+                ProductName: '',
+                Definition: '',
+                Author: '',
+                TechStack: '',
+                Link: '',
+                Email: '' // Email field, reset after successful submission
+            });
+            setUsingTechStack(false);
+            setProjectDeployed(false);
+        } catch (error) {
+            console.error('Error saving form data:', error);
+        }
     };
 
     return (
@@ -46,15 +120,16 @@ export default function ProjectForm() {
             </div>
             <div className="mb-4">
                 <label htmlFor="Definition" className="block text-gray-700">Definition</label>
-                <input
-                    type="text"
+                <textarea
                     id="Definition"
                     name="Definition"
                     value={formData.Definition}
                     onChange={handleChange}
+                    rows={5}
                     className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
                     required
                 />
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
             </div>
             <div className="mb-4">
                 <label htmlFor="Author" className="block text-gray-700">Author</label>
@@ -63,6 +138,18 @@ export default function ProjectForm() {
                     id="Author"
                     name="Author"
                     value={formData.Author}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
+                    required
+                />
+            </div>
+            <div className="mb-4">
+                <label htmlFor="Email" className="block text-gray-700">Email</label>
+                <input
+                    type="email"
+                    id="Email"
+                    name="Email"
+                    value={formData.Email}
                     onChange={handleChange}
                     className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
                     required
@@ -87,12 +174,12 @@ export default function ProjectForm() {
             </div>
             {isUsingTechStack && (
                 <div className="mb-4">
-                    <label htmlFor="Textfield_TechStack" className="block text-gray-700">Tech Stack list</label>
+                    <label htmlFor="TechStack" className="block text-gray-700">Tech Stack list</label>
                     <input
                         type="text"
-                        id="Textfield_TechStack"
-                        name="Textfield_TechStack"
-                        value={formData.Textfield_TechStack}
+                        id="TechStack"
+                        name="TechStack"
+                        value={formData.TechStack}
                         onChange={handleChange}
                         className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
                     />
@@ -115,21 +202,19 @@ export default function ProjectForm() {
                     className="react-switch_2"
                 />
             </div>
-
             {isProjectDeployed && (
                 <div className="mb-4">
-                    <label htmlFor="Textfield_ProjectDeployed" className="block text-gray-700">Link to your project: </label>
+                    <label htmlFor="Link" className="block text-gray-700">Link to your project: </label>
                     <input
                         type="text"
-                        id="Textfield_ProjectDeployed"
-                        name="Textfield_ProjectDeployed"
-                        value={formData.Textfield_ProjectDeployed}
+                        id="Link"
+                        name="Link"
+                        value={formData.Link}
                         onChange={handleChange}
                         className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300"
                     />
                 </div>
             )}
-            
             <button
                 type="submit"
                 className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"

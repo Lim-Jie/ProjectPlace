@@ -19,13 +19,13 @@ const Tabs = () => {
           className={`${styles.tab} ${activeTab === 'tab1' ? styles.active : ''}`}
           onClick={() => handleTabClick('tab1')}
         >
-          Startup
+          Projects
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'tab2' ? styles.active : ''}`}
           onClick={() => handleTabClick('tab2')}
         >
-          Projects
+          Startup
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'tab3' ? styles.active : ''}`}
@@ -43,8 +43,8 @@ const Tabs = () => {
 
 
       <div className={styles.content}>
-        {activeTab === 'tab1' && <StartupForm />}
-        {activeTab === 'tab2' && <ProjectForm/>}
+        {activeTab === 'tab1' && <ProjectForm/>}
+        {activeTab === 'tab2' && <StartupForm />}
         {activeTab === 'tab3' && <div>Content for Tab 3</div>}
         {activeTab === 'tab4' && <div>Content for Tab 4 </div>}
       </div>

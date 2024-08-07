@@ -52,9 +52,7 @@ const TestingPage = () => {
               />
             )}
             
-            {/* Render Founder */}
-            <p className="mt-4 text-gray-500"><strong>Founder:</strong> {doc.Founder}</p>
-            
+
             {doc.Link && (
               <p className="mt-4">
                 <strong>Website:</strong>{" "}
@@ -68,6 +66,14 @@ const TestingPage = () => {
                 </a>
               </p>
             )}
+
+            {/* Render Tech Stack */}
+            <p className="mt-4 text-gray-500"><strong>TechStack:</strong> {doc.TechStack}</p>
+            
+            {/* Render Author */}
+            <p className="mt-4 text-gray-500"><strong>Author:</strong> {doc.Author}</p>
+            
+
 
           </div>
           
