@@ -1,32 +1,19 @@
 // pages/testing.js
 'use client';
 import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
-import { db } from '../firebase/config';
+import { fetchDocuments } from '../firebase/config';
+
 
 const TestingPage = () => {
   const [documents, setDocuments] = useState([]);
 
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      const querySnapshot = await getDocs(collection(db, 'Testing'));
-      const docs = await Promise.all(
-        querySnapshot.docs.map(async (doc) => {
-          const data = doc.data();
-          if (data.imagePath) {
-            const storage = getStorage();
-            const imageRef = ref(storage, data.imagePath);
-            const imageUrl = await getDownloadURL(imageRef);
-            data.imageUrl = imageUrl;
-          }
-          return data;
-        })
-      );
-      setDocuments(docs);
-    };
+  const getDocuments = async () => {
+    const docs = await fetchDocuments('Forum');
+    setDocuments(docs);
+  };
 
-    fetchDocuments();
+  useEffect(() => {
+    getDocuments();
   }, []);
 
   return (
@@ -44,7 +31,7 @@ const TestingPage = () => {
             <p className="mb-2 text-gray-500">{doc.Definition}</p>
             
             {/* Render Image */}
-            {doc.imagePath && (
+            {doc.imageUrl && (
               <img
                 src={doc.imageUrl}
                 alt="Document Image"
@@ -84,52 +71,3 @@ const TestingPage = () => {
 };
 
 export default TestingPage;
-
-
-
-
-
-
-
-
-
-
-
-/*
-// pages/testing.js
-'use client';
-import { useEffect, useState } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
-
-const TestingPage = () => {
-  const [documents, setDocuments] = useState([]);
-
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      const querySnapshot = await getDocs(collection(db, 'Testing'));
-      const docs = querySnapshot.docs.map(doc => doc.data());
-      setDocuments(docs);
-    };
-
-    fetchDocuments();
-  }, []);
-
-  return (
-    <div>
-      <h1>Testing Collection</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {documents.map((doc, index) => (
-          <div key={index} style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '10px', margin: '10px', width: '300px' }}>
-            {Object.entries(doc).map(([key, value]) => (
-              <p key={key}><strong>{key}:</strong> {value}</p>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default TestingPage;
-*/

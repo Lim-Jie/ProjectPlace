@@ -1,5 +1,6 @@
-
 import DataTable from '../components/TableAdmin';
+import ProductLoader from "../components/AdminProductLoader";
+
 
 const data = [
   { id: 1, name: 'John Doe', email: 'john@example.com' },
@@ -15,6 +16,8 @@ export default function Dashboard() {
       <div className="min-h-screen flex flex-col">
             <h1>Data Table</h1>
             <DataTable data={data} />
+            <ProductLoader/>
+          
       </div>
     );
   }

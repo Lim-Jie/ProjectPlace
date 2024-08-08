@@ -1,7 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Switch from 'react-switch';
+import { useDropzone } from 'react-dropzone';
 import { storeFormDataWithEmailVerification } from '../firebase/config'; // Adjust the import path based on your file structure
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
+import Image from 'next/image';
+
 
 export default function ProjectForm() {
     const [formData, setFormData] = useState({
@@ -12,6 +16,7 @@ export default function ProjectForm() {
         Link: '',
         Email: '' // Added Email field
     });
+    const [file, setFile] = useState(null); // State to keep track of the selected file
     const [isUsingTechStack, setUsingTechStack] = useState(false);
     const [isProjectDeployed, setProjectDeployed] = useState(false);
     const [error, setError] = useState('');
@@ -69,25 +74,42 @@ export default function ProjectForm() {
         setProjectDeployed(checked);
     };
 
+    const handleFileChange = (acceptedFiles) => {
+        setFile(acceptedFiles[0]);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
+
         // Validate form data before submitting
         if (error) {
             console.log('Form has errors. Cannot submit.');
             return;
         }
-    
+
         try {
+            let imageUrl = '';
+
+            if (file) {
+                // Upload image to Firebase Storage
+                const storage = getStorage();
+                const storageRef = ref(storage, `images/${file.name}`);
+                await uploadBytes(storageRef, file);
+                imageUrl = await getDownloadURL(storageRef);
+            }
+
+            // Add image URL to form data
+            const formDataWithImage = { ...formData, imageUrl };
+
             // Save form data to Firestore and update user document
-            await storeFormDataWithEmailVerification('Testing', true, formData, formData.Email); // Collection name is 'Testing', auto ID is true
+            await storeFormDataWithEmailVerification('Testing', true, formDataWithImage, formData.Email); // Collection name is 'Testing', auto ID is true
             console.log('Form data saved successfully.');
-    
+
             // Clear local storage after successful submission
             localStorage.removeItem('projectFormData');
             localStorage.removeItem('isUsingTechStack');
             localStorage.removeItem('isProjectDeployed');
-    
+
             // Optionally reset form state here if desired
             setFormData({
                 ProductName: '',
@@ -99,10 +121,16 @@ export default function ProjectForm() {
             });
             setUsingTechStack(false);
             setProjectDeployed(false);
+            setFile(null);
         } catch (error) {
             console.error('Error saving form data:', error);
         }
     };
+
+    // Dropzone for file upload
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop: (acceptedFiles) => handleFileChange(acceptedFiles)
+    });
 
     return (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-full max-w-4xl px-4">
@@ -215,6 +243,23 @@ export default function ProjectForm() {
                     />
                 </div>
             )}
+            <div className="mb-4">
+                <label htmlFor="image" className="block text-gray-700">Upload Image</label>
+                <div {...getRootProps()} className="mt-1 block w-full h-32 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 cursor-pointer">
+                    <input {...getInputProps()} />
+                    {isDragActive ? (
+                        <p>Drop the files here ...</p>
+                    ) : (
+                        <p style={{ color: 'rgba(255, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Image src="/icons/PhUpload.svg" alt="upload icon" width={20} height={20} style={{ marginRight: '5px' }} />
+                            Drag OR drop some files here, or click to select files
+                        </p>
+                    )}
+                </div>
+                {file && <p className="mt-2 text-sm text-gray-500">{file.name}</p>}
+            </div>
+
+
             <button
                 type="submit"
                 className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"

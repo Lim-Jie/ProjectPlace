@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, collection, addDoc, updateDoc, doc, arrayUnion,getDoc,setDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, updateDoc, doc, arrayUnion,getDoc,setDoc,getDocs, deleteDoc} from 'firebase/firestore';
+import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -40,7 +41,6 @@ export const storeFormDataWithEmailVerification = async (collectionName, useAuto
     try {
         // Store the form data and get the document ID
         const docId = await storeFormData(collectionName, useAutoId, formData);
-        
         console.log("Document written with ID: ", docId);
 
         // Reference to the user document
@@ -68,6 +68,55 @@ export const storeFormDataWithEmailVerification = async (collectionName, useAuto
         throw e;
     }
 };
+
+export const fetchDocuments = async (collectionName) => {
+    const querySnapshot = await getDocs(collection(db, collectionName));
+    
+    const docs = await Promise.all(
+      querySnapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        // Include the document ID in the data
+        const docId = doc.id;
+        if (data.imageUrl) {
+          const storage = getStorage();
+          const imageRef = ref(storage, data.imageUrl);
+          const imageUrl = await getDownloadURL(imageRef);
+          data.imageUrl = imageUrl;
+        }
+        // Return the data along with the document ID
+        return { id: docId, ...data };
+      })
+    );
+    
+    return docs;
+  };
+
+
+  export const MoveDocToCollection = async (docId, sourceCollection, destCollection) => {
+    try {
+      const sourceDocRef = doc(db, sourceCollection, docId);
+      const docSnapshot = await getDoc(sourceDocRef);
+      if (!docSnapshot.exists()) {
+        throw new Error('Document not found');
+      }
+      
+      const docData = docSnapshot.data();
+      const destDocRef = doc(db, destCollection, docId);
+      await setDoc(destDocRef, docData);
+      await deleteDoc(sourceDocRef);
+      console.log(`Document moved from ${sourceCollection} to ${destCollection}`);
+    } catch (error) {
+      console.error("Error moving document: ", error);
+    }
+  };
+
+
+
+
+
+
+
+
 
 
 
