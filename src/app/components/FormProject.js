@@ -2,10 +2,9 @@
 import { useState, useEffect } from 'react';
 import Switch from 'react-switch';
 import { useDropzone } from 'react-dropzone';
-import { storeFormDataWithEmailVerification } from '../firebase/config'; // Adjust the import path based on your file structure
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import storage functions
+import { storeFormDataWithEmailVerification } from '../firebase/config';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Import Firebase Storage
 import Image from 'next/image';
-
 
 export default function ProjectForm() {
     const [formData, setFormData] = useState({
@@ -14,7 +13,7 @@ export default function ProjectForm() {
         Author: '',
         TechStack: '',
         Link: '',
-        Email: '' // Added Email field
+        Email: '', // Added Email field
     });
     const [file, setFile] = useState(null); // State to keep track of the selected file
     const [isUsingTechStack, setUsingTechStack] = useState(false);
@@ -23,7 +22,6 @@ export default function ProjectForm() {
 
     // Load data from localStorage when component mounts
     useEffect(() => {
-        console.log('Loading data from localStorage...');
         const savedData = localStorage.getItem('projectFormData');
         const savedTechStack = localStorage.getItem('isUsingTechStack');
         const savedProjectDeployed = localStorage.getItem('isProjectDeployed');
@@ -41,7 +39,6 @@ export default function ProjectForm() {
 
     // Save data to localStorage whenever formData, isUsingTechStack, or isProjectDeployed changes
     useEffect(() => {
-        console.log('Saving data to localStorage...');
         if (formData.ProductName || formData.Definition || formData.Author || formData.TechStack || formData.Link || formData.Email) {
             localStorage.setItem('projectFormData', JSON.stringify(formData));
         }
@@ -82,6 +79,10 @@ export default function ProjectForm() {
         e.preventDefault();
 
         // Validate form data before submitting
+        if (!formData.ProductName || !formData.Definition || !formData.Author || !formData.Email || (isUsingTechStack && !formData.TechStack)) {
+            setError('Please fill out all required fields.');
+            return;
+        }
         if (error) {
             console.log('Form has errors. Cannot submit.');
             return;
@@ -227,14 +228,14 @@ export default function ProjectForm() {
                     activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
                     height={20}
                     width={48}
-                    className="react-switch_2"
+                    className="react-switch"
                 />
             </div>
             {isProjectDeployed && (
                 <div className="mb-4">
-                    <label htmlFor="Link" className="block text-gray-700">Link to your project: </label>
+                    <label htmlFor="Link" className="block text-gray-700">Link</label>
                     <input
-                        type="text"
+                        type="url"
                         id="Link"
                         name="Link"
                         value={formData.Link}
@@ -244,27 +245,27 @@ export default function ProjectForm() {
                 </div>
             )}
             <div className="mb-4">
-                <label htmlFor="image" className="block text-gray-700">Upload Image</label>
-                <div {...getRootProps()} className="mt-1 block w-full h-32 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring focus:border-blue-300 cursor-pointer">
+                <label htmlFor="file" className="block text-gray-700">Upload Image</label>
+                <div {...getRootProps()} className="mt-1 flex items-center justify-center border-2 border-dashed border-gray-300 p-6 rounded-md">
                     <input {...getInputProps()} />
                     {isDragActive ? (
-                        <p>Drop the files here ...</p>
+                        <p className="text-gray-500">Drop the files here ...</p>
                     ) : (
-                        <p style={{ color: 'rgba(255, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Image src="/icons/PhUpload.svg" alt="upload icon" width={20} height={20} style={{ marginRight: '5px' }} />
-                            Drag OR drop some files here, or click to select files
-                        </p>
+                        <p className="text-gray-500">Drag 'n' drop a file here, or click to select one</p>
                     )}
                 </div>
-                {file && <p className="mt-2 text-sm text-gray-500">{file.name}</p>}
+                {file && (
+                    <div className="mt-4">
+                        <p className="text-gray-700">Selected file: {file.name}</p>
+                        <Image src={URL.createObjectURL(file)} alt="Preview" width={200} height={200} />
+                    </div>
+                )}
             </div>
-
-
             <button
                 type="submit"
-                className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
+                className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
             >
-                Submit for Request
+                Submit
             </button>
         </form>
     );
